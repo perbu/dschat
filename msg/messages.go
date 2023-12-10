@@ -26,3 +26,6 @@ func (m EgressMessage) ToIngress() IngressMessage {
 		Msg:  m.Msg,
 	}
 }
+
+type UserDisconnected struct {
+}

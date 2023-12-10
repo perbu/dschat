@@ -72,12 +72,11 @@ func (a *SshNode) Receive(c *actor.Context) {
 			nodePid: c.PID(),
 			userPid: userPid,
 		})
-	case UserDisconnected:
+	case msg.UserDisconnected:
 		// wish server has a user that has disconnected
 		// find the user actor and stop it
-		m := c.Message().(UserDisconnected)
-		a.removeChild(m.pid)
-		a.engine.Poison(m.pid).Wait()
+		a.removeChild(c.Sender())
+		a.engine.Poison(c.Sender()).Wait()
 	case msg.EgressMessage:
 		m := c.Message().(msg.EgressMessage)
 		// broadcast the message to all users:

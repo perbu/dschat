@@ -39,6 +39,9 @@ func (u *SshUser) Receive(c *actor.Context) {
 		m := c.Message().(UserRegisterProgram)
 		u.program = m.program
 		fmt.Println("USER: Program registered")
+	case msg.UserDisconnected:
+		fmt.Println("USER: User disconnected")
+		c.Forward(c.Parent())
 	default:
 		fmt.Printf("USER: Unknown message(%T): %v\n", c.Message(), c.Message())
 	}

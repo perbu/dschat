@@ -14,10 +14,6 @@ type NewUserResponse struct {
 	userPid *actor.PID
 }
 
-type UserDisconnected struct {
-	pid *actor.PID
-}
-
 type UserRegisterProgram struct {
 	program *tea.Program
 }

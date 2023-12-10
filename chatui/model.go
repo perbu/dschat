@@ -9,6 +9,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/perbu/dschat/msg"
 	"strings"
+	"time"
 )
 
 type Model struct {
@@ -79,7 +80,7 @@ func (m Model) Update(event tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch ev.Type {
 		case tea.KeyCtrlC, tea.KeyEsc:
-
+			m.engine.Send(m.userPid, msg.UserDisconnected{})
 			return m, tea.Quit
 		case tea.KeyEnter:
 			// construct the message:
@@ -98,7 +99,8 @@ func (m Model) Update(event tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 	case msg.IngressMessage:
-		m.messages = append(m.messages, m.senderStyle.Render(ev.From.GetID())+": "+ev.Msg)
+		timeStamp := time.Now().Format("15:04:05")
+		m.messages = append(m.messages, m.senderStyle.Render(ev.From.ID)+timeStamp+": "+ev.Msg)
 		m.viewport.SetContent(strings.Join(m.messages, "\n"))
 		m.viewport.GotoBottom()
 
