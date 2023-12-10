@@ -25,9 +25,13 @@ func realMain() error {
 		return fmt.Errorf("actor.NewEngine: %w", err)
 	}
 	// create a secure node.
+	hostname, err := os.Hostname()
+	if err != nil {
+		return fmt.Errorf("os.Hostname: %w", err)
+	}
 	secPid := engine.Spawn(
 		sshnode.NewSshNode,
-		"sshnode",
+		hostname,
 	)
 
 	<-ctx.Done()

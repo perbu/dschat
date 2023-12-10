@@ -45,23 +45,6 @@ type SshNode struct {
 	children  []*actor.PID
 }
 
-type NewUserRequest struct {
-	userid string
-}
-type NewUserResponse struct {
-	err     error
-	nodePid *actor.PID
-	userPid *actor.PID
-}
-
-type UserDisconnected struct {
-	pid *actor.PID
-}
-
-type UserRegisterProgram struct {
-	program *tea.Program
-}
-
 func (a *SshNode) Receive(c *actor.Context) {
 	switch c.Message().(type) {
 	case actor.Initialized:
@@ -95,12 +78,13 @@ func (a *SshNode) Receive(c *actor.Context) {
 		m := c.Message().(UserDisconnected)
 		a.removeChild(m.pid)
 		a.engine.Poison(m.pid).Wait()
-	case msg.Message:
-		m := c.Message().(msg.Message)
-		fmt.Println("Node got a message:", m)
+	case msg.EgressMessage:
+		m := c.Message().(msg.EgressMessage)
 		// broadcast the message to all users:
 		for _, p := range a.children {
-			a.engine.Send(p, m)
+			fmt.Printf("NODE: %s --> %s\n", m.From.GetID(), p.GetID())
+			im := m.ToIngress()
+			a.engine.Send(p, im)
 		}
 	default:
 		fmt.Printf("Node got an unknown message: %T\n", c.Message())

@@ -79,22 +79,25 @@ func (m Model) Update(event tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch ev.Type {
 		case tea.KeyCtrlC, tea.KeyEsc:
+
 			return m, tea.Quit
 		case tea.KeyEnter:
 			// construct the message:
 			// Todo: abstract this into a function which looks at the message, figures
 			// out if it is a broadcast or direct message.
-			chatMsg := msg.Message{
-				From: m.nodePid,
-				To:   "",
-				Msg:  m.textarea.Value(),
+
+			chatMsg, err := m.NewEgressMessage(m.textarea.Value())
+			if err != nil {
+				fmt.Println("error:", err)
+				m.textarea.Reset()
+				break
 			}
 			// send the message to out local node for distribution
-			m.engine.Send(m.nodePid, chatMsg)
+			m.engine.Send(m.userPid, chatMsg)
 			m.textarea.Reset()
 		}
 
-	case msg.Message:
+	case msg.IngressMessage:
 		m.messages = append(m.messages, m.senderStyle.Render(ev.From.GetID())+": "+ev.Msg)
 		m.viewport.SetContent(strings.Join(m.messages, "\n"))
 		m.viewport.GotoBottom()
@@ -106,6 +109,26 @@ func (m Model) Update(event tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	return m, tea.Batch(tiCmd, vpCmd)
+}
+
+func (m Model) NewEgressMessage(command string) (msg.EgressMessage, error) {
+	recipient := "" // default to broadcast
+	// if it starts with "/" it is a command:
+	if strings.HasPrefix(command, "/msg") {
+		tokens := strings.Split(command, " ")
+		if len(tokens) < 3 {
+			return msg.EgressMessage{}, fmt.Errorf("invalid command")
+		}
+		recipient = tokens[1]
+		// this kinda alters the message, but we can fix that later (never)
+		command = strings.Join(tokens[2:], " ")
+	}
+
+	return msg.EgressMessage{
+		From: m.userPid,
+		To:   recipient,
+		Msg:  command,
+	}, nil
 }
 
 func (m Model) View() string {
